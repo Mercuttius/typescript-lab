@@ -1,0 +1,11 @@
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
+const directory=path.resolve('.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+if(!existsSync(directory))throw new Error('Inicie npm run dev e acesse a página antes de preparar o banco local.');
+const files=readdirSync(directory).filter(f=>f.endsWith('.sqlite')&&f!=='metadata.sqlite');
+if(files.length!==1)throw new Error('Não foi possível identificar com segurança o banco local.');
+const db=new DatabaseSync(path.join(directory,files[0]));
+const has=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='attempts'").get();
+if(!has){db.exec(readFileSync('drizzle/0000_chilly_corsair.sql','utf8'));console.log('Banco local preparado.')}else console.log('Banco local já está preparado. Histórico preservado.');
+db.close();
